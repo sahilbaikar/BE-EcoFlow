@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+
+    <script src="{% static 'ecoflowapp\setup\tailwindcss.js' %}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
+
+    <title>Add New Node</title>
+</head>
+<body>
+    
+    <h2 class="text-2xl text-center py-10 font-bold">Add Cluster <i class="fa-solid fa-boxes-stacked"></i></h2>
+    
+
+    
+
+    <form class="max-w-sm mx-auto px-2" method="post" action="{% url 'addcluster' %}">
+        {% csrf_token %}
+
+        <div class="mb-5">
+            <label for="text" class="block mb-2 text-sm font-medium text-gray-900 ">Enter Cluster Name:</label>
+            <input type="text" id="text" name="cluster_name"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="cluster_name" required>
+        </div>
+
+        <div class="pb-6">
+            {% for node in user_nodes %}
+            <label>
+                <input type="checkbox" name="selected_nodes" value="{{ node.node_name }}">
+                {{ node.node_name }}
+            </label><br>
+            {% endfor %}
+        </div>
+
+
+        
+        <!-- 
+            <input class="hidden" type="text" name="cluster_name" value="{{ request.user.username }}" required>
+        node name
+        <div class="mb-5">
+        <label for="text" class="block mb-2 text-sm font-medium text-gray-900 ">Enter Node Name:</label>
+        <input type="text" id="text" name="node_name"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="node_alpha" required>
+        </div>
+
+        Location
+        <label for="text" class="mb-5 block mb-2 text-sm font-medium text-gray-900 text-center">Add Location</label>
+        <div class="mb-5">
+            <label for="text" class="block mb-2 text-sm font-medium text-gray-900 ">Latitude:</label>
+            <input type="text" id="text" name="lat"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="19.076090" required>
+        </div>
+        <div class="mb-5">
+            <label for="text" class="block mb-2 text-sm font-medium text-gray-900 ">Longitude:</label>
+            <input type="text" id="text" name="long" 
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5" placeholder="72.877426" required>
+        </div>
+        
+        <label for="text" class="mb-5 block mb-2 text-sm font-medium text-gray-500">Dont Know Location get it 
+            <a href="https://www.latlong.net/" class="text-blue-500 underline" target="_blank">here !!!</a></label>
+         -->
+        <button type="submit" 
+            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-10 py-2.5 text-center">
+            Save
+        </button>
+    </form>
+  
+</body>
+</html>

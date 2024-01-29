@@ -1,0 +1,533 @@
+{% extends 'ecoflowapp/base.html' %} {% block title %}AgroSense | Node Data View{% endblock %}
+<div>{% block content %} {% load static %}</div>
+    
+
+    <!-- content -->
+    <div class="">
+
+        <!-- Latest Sensor Data -->
+        <div id="sensordata" class="h-screen pt-16 bg-[#f0fdf4]">
+            <div class="text-2xl text-center font-bold py-3 text-green-700">Latest Node Data</div>
+            <div class="mx-10 h-[550px] grid grid-cols-2 gap-4">
+                <div class="text-center text-xl p-4 border shadow-xl rounded-xl bg-white">
+
+                    <div class="grid grid-cols-3">
+                        <div></div>
+                        <div class="font-bold">
+                            <div class="pb-6 text-center">Node : <b class="text-green-700">{{ nodename }}</b></div>
+                        </div>
+                        <div class="text-right mr-10 font-bold" id="heartIcon" >
+                            <i class="fa-solid fa-heart-pulse text-4xl px-2"></i>Live</div>
+                    </div>
+
+                    <div class="text-left py-10 px-20">
+
+                        <div class="grid grid-cols-2 gap-1">
+                            
+                            <!-- plant root img -->
+                            <div>
+                                <img src="{% static 'ecoflowapp\setup\images\plant-root.png' %}" 
+                                class="h-10/12 mr-3" alt="Plant root img" />
+                            </div>
+
+                            <div class="">
+
+                                <div class="h-24 border text-center py-2 rounded-lg shadow my-1">
+                                    <div class="font-bold pb-3">Level 1</div>
+                                    <div> 
+                                        <i class="fa-solid fa-droplet"></i>
+                                        {% if latest_data %} {{ latest_data.depth_1 }} % {% endif %}
+                                    </div>
+                                </div>
+                                <div class="h-24 border text-center py-2 rounded-lg shadow my-1">
+                                    <div class="font-bold pb-3">Level 2</div>
+                                    <div> 
+                                        <i class="fa-solid fa-droplet"></i>
+                                        {% if latest_data %} {{ latest_data.depth_2 }} % {% endif %}
+
+                                    </div>
+                                </div>
+                                <div class="h-24 border text-center py-2 rounded-lg shadow my-1">
+                                    <div class="font-bold pb-3">Level 3</div>
+                                    <div> 
+                                        <i class="fa-solid fa-droplet"></i>
+                                        {% if latest_data %} {{ latest_data.depth_3 }} % {% endif %}
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4 text-center pt-4">
+                            <div><b>Temperature <i class="fa-solid fa-temperature-low"></i> :</b> 
+                                {% if latest_data %} {{ latest_data.temperature }} °C {% endif %} 
+                            </div>
+                            <div><b>Humidity    <i class="fa-solid fa-water"></i>           :</b> 
+                                {% if latest_data %} {{ latest_data.humidity }} % {% endif %} 
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="p-4 border shadow-xl rounded-xl bg-white">
+                    <div class="text-center text-xl font-bold">Location of Node on Map</div>
+                    <div class="rounded-xl my-4 h-[440px] border text-center text-xl font-bold px-2 pt-5">
+                        {{ map_html|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chart -->
+        <div class="h-screen pt-16 bg-[#eef2ff]">
+            <div class="text-2xl text-center font-bold py-3">Chart</div>
+            
+            {% if latest_5_sensor_data_list %}
+
+                <div class="px-10 w-full my-6 grid grid-cols-2 gap-4">
+
+                    <div>
+                        <div class="text-center text-xl font-bold py-4">Temperature & Humidity Chart</div>
+                        <canvas id="temphum-chart"></canvas>
+                    </div>
+                    
+                    <div>
+                        <div class="text-center text-xl font-bold py-4">Depth : 1,2,3 Chart</div>
+                        <canvas id="depth-chart"></canvas>    
+                    </div>
+                </div>
+
+                <script type="text/javascript">
+                    // Chart
+                    const sensorData = [
+                        {% for entry in latest_5_sensor_data_list %}
+                        {
+                            timestamp: "{{ entry.timestamp }}",
+                            temperature: {{ entry.temperature }},
+                            humidity: {{ entry.humidity }},
+                            depth_1: {{ entry.depth_1 }},
+                            depth_2: {{ entry.depth_2 }},
+                            depth_3: {{ entry.depth_3 }}
+                        },
+                        {% endfor %}
+                    ];
+                
+                    // Extract timestamp, temperature, and humidity arrays
+                    const timestamps = sensorData.map(entry => entry.timestamp);
+                    const temperatures = sensorData.map(entry => entry.temperature);
+                    const humidity = sensorData.map(entry => entry.humidity);
+                    const depth_1 = sensorData.map(entry => entry.depth_1);
+                    const depth_2 = sensorData.map(entry => entry.depth_2);
+                    const depth_3 = sensorData.map(entry => entry.depth_3);
+                
+                    /* Chart initialisations */
+                    /* Line Chart */
+                    var config = {
+                        type: "line",
+                        data: {
+                            labels: timestamps,
+                            datasets: [
+                                {
+                                    label: 'Temperature',
+                                    backgroundColor: "#4c51bf",
+                                    borderColor: "#4c51bf",
+                                    data: temperatures,
+                                    fill: false,
+                                },
+                                {
+                                    label: 'Humidity',
+                                    fill: false,
+                                    backgroundColor: "#ed64a6",
+                                    borderColor: "#ed64a6",
+                                    data: humidity,
+                                },
+                            ],
+                        },
+                        options: {
+                            maintainAspectRatio: false,
+                            responsive: true,
+                            title: {
+                                display: false,
+                                text: "Sales Charts",
+                                fontColor: "black",
+                            },
+                            legend: {
+                                labels: {
+                                    fontColor: "black",
+                                },
+                                align: "end",
+                                position: "bottom",
+                            },
+                            tooltips: {
+                                mode: "index",
+                                intersect: false,
+                            },
+                            hover: {
+                                mode: "nearest",
+                                intersect: true,
+                            },
+                            scales: {
+                                xAxes: [
+                                    {
+                                        ticks: {
+                                            fontColor: "black",
+                                        },
+                                        display: true,
+                                        scaleLabel: {
+                                            display: false,
+                                            labelString: "Month",
+                                            fontColor: "black",
+                                        },
+                                        gridLines: {
+                                            display: true,
+                                            borderDash: [2],
+                                            borderDashOffset: [2],
+                                            color: "rgba(33, 37, 41, 0.3)",
+                                            zeroLineColor: "rgba(33, 37, 41, 0.3)",
+                                            zeroLineBorderDash: [2],
+                                            zeroLineBorderDashOffset: [2],
+                                        },
+                                    },
+                                ],
+                                yAxes: [
+                                    {
+                                        ticks: {
+                                            fontColor: "rgba(255,255,255,.7)",
+                                        },
+                                        display: true,
+                                        scaleLabel: {
+                                            display: false,
+                                            labelString: "Value",
+                                            fontColor: "white",
+                                        },
+                                        gridLines: {
+                                            borderDash: [3],
+                                            borderDashOffset: [3],
+                                            drawBorder: false,
+                                            color: "rgba(255, 255, 255, 0.15)",
+                                            zeroLineColor: "rgba(33, 37, 41, 0)",
+                                            zeroLineBorderDash: [2],
+                                            zeroLineBorderDashOffset: [2],
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    };
+                
+                    var ctx = document.getElementById("temphum-chart").getContext("2d");
+                    window.myLine = new Chart(ctx, config);
+                
+                    /* Line Chart */
+                    var depth_chartconfig = {
+                        type: "line",
+                        data: {
+                            labels: timestamps,
+                            datasets: [
+                                {
+                                    label: 'depth_1',
+                                    backgroundColor: "#4c51bf",
+                                    borderColor: "#4c51bf",
+                                    data: depth_1,
+                                    fill: false,
+                                },
+                                {
+                                    label: 'depth_2',
+                                    backgroundColor: "#ed64a6",
+                                    borderColor: "#ed64a6",
+                                    data: depth_2,
+                                    fill: false,
+                                },
+                                {
+                                    label: 'depth_3',
+                                    backgroundColor: "#10b981",
+                                    borderColor: "#10b981",
+                                    data: depth_3,
+                                    fill: false,
+                                },
+                            ],
+                        },
+                        options: {
+                            maintainAspectRatio: false,
+                            responsive: true,
+                            title: {
+                                display: false,
+                                text: "Sales Charts",
+                                fontColor: "black",
+                            },
+                            legend: {
+                                labels: {
+                                    fontColor: "black",
+                                },
+                                align: "end",
+                                position: "bottom",
+                            },
+                            tooltips: {
+                                mode: "index",
+                                intersect: false,
+                            },
+                            hover: {
+                                mode: "nearest",
+                                intersect: true,
+                            },
+                            scales: {
+                                xAxes: [
+                                    {
+                                        ticks: {
+                                            fontColor: "black",
+                                        },
+                                        display: true,
+                                        scaleLabel: {
+                                            display: false,
+                                            labelString: "Month",
+                                            fontColor: "black",
+                                        },
+                                        gridLines: {
+                                            display: true,
+                                            borderDash: [2],
+                                            borderDashOffset: [2],
+                                            color: "rgba(33, 37, 41, 0.3)",
+                                            zeroLineColor: "rgba(33, 37, 41, 0.3)",
+                                            zeroLineBorderDash: [2],
+                                            zeroLineBorderDashOffset: [2],
+                                        },
+                                    },
+                                ],
+                                yAxes: [
+                                    {
+                                        ticks: {
+                                            fontColor: "rgba(255,255,255,.7)",
+                                        },
+                                        display: true,
+                                        scaleLabel: {
+                                            display: false,
+                                            labelString: "Value",
+                                            fontColor: "white",
+                                        },
+                                        gridLines: {
+                                            borderDash: [3],
+                                            borderDashOffset: [3],
+                                            drawBorder: false,
+                                            color: "rgba(255, 255, 255, 0.15)",
+                                            zeroLineColor: "rgba(33, 37, 41, 0)",
+                                            zeroLineBorderDash: [2],
+                                            zeroLineBorderDashOffset: [2],
+                                        },
+                                    },
+                                ],
+                            },
+                        },
+                    };
+                    var depth_chartctx = document.getElementById("depth-chart").getContext("2d");
+                    window.myLine = new Chart(depth_chartctx, depth_chartconfig);
+                </script>
+                
+              
+                
+            {% else %}
+
+                <div class="text-center text-red-700 text-4xl font-bold mt-20">No Data for Chart</div>
+            
+            {% endif %}
+        </div>
+
+        
+
+        
+        <!-- Datalog -->
+        <div id="datalog" class="h-screen pt-16 bg-[#fefce8]">
+            <div class="text-2xl text-center font-bold py-3">Data Log</div>
+            
+
+            <div class="overflow-x-auto h-screen">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                            <th class="px-6 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">L1</th>
+                            <th class="px-6 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">L2</th>
+                            <th class="px-6 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">L3</th>
+                            <th class="px-6 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Temp</th>
+                            <th class="px-6 py-3 text-left text-md font-medium text-gray-500 uppercase tracking-wider">Hum</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Your data rows go here -->
+                        {% if sensor_data %}
+                            {% for s_data in sensor_data %}
+                    
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ s_data.timestamp }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ s_data.depth_1 }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ s_data.depth_2 }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ s_data.depth_3 }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ s_data.temperature }} °C</td>
+                                    <td class="px-6 py-4 whitespace-nowrap">{{ s_data.humidity }} %</td>
+                                </tr>
+                                
+                            {% endfor %}
+                        {% endif %}
+
+                    </tbody>
+                </table>
+            </div>
+            
+            
+        </div>
+
+        
+        
+        <!-- IoT Settings -->
+        {% if user.is_authenticated %}
+        
+        <div id="settings" class="h-screen pt-16 ">
+            <div class="text-2xl text-center font-bold py-3">Project Settings</div>
+            
+            <div class="w-4/6 border mx-40 px-10 py-8 rounded shadow">
+
+                <div class="text-2xl py-3">Username : <b>{{ request.user.username }}</b></div>
+                <div class="text-2xl py-3">Node Name : <b>{{ nodename }}</b></div>
+                <div class="text-2xl py-3">Location (Latitude) :  {{ lat }}</div>
+                <div class="text-2xl py-3">Location (Longitude) : {{ long }}</div>
+
+                <a href="https://wokwi.com/projects/383796194730640385" target="_blank" class="text-2xl py-3 font-bold hover:text-blue-600"><i class="fa-regular fa-hand-pointer"></i> Click for Sample ESP32 Project Simulation Link of AgroSense </a>
+                
+            
+            <!-- Accordion Container -->
+            <div class="border rounded-md overflow-hidden mt-6">
+        
+                <!-- Accordion Item 1 -->
+                <div class="border-b">
+                  <!-- Accordion Heading 1 -->
+                  <div class="flex items-center justify-between p-2 cursor-pointer font-bold text-blue-600">
+                    <span>See Api Key</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                  <!-- Accordion Content 1 -->
+                  <div class="p-2 hidden">
+                    <p>Api Key :<span class="mr-10 m-2 p-2 bg-gray-100 rounded" id="api_key"> {{ api_key }}</span>
+                        <!-- Copy to Clipboard Button -->
+                        <button id="copyButton" class="bg-blue-500 text-white px-2 py-1 rounded"><i class="fa-solid fa-copy"></i></button>
+                    </p>
+                  </div>
+                </div>
+          
+                <!-- Accordion Item 2 -->
+                <div class="border-b">
+                    <!-- Accordion Heading 2 -->
+                    <div class="flex items-center justify-between p-2 cursor-pointer font-bold text-blue-600">
+                        <span>Sample Api (Write & Read)</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                    
+                    <!-- Accordion Content 2 -->
+                                                            
+                    <div class="p-2 hidden">
+                        <div id="channelFeed" class="py-2 bg-gray-100 rounded my-4 px-2">
+                            <script>
+                                // Function to generate a random number between min and max
+                                function getRandomNumber(min, max) {
+                                    return Math.floor(Math.random() * (max - min + 1)) + min;
+                                }
+                        
+                                // Generate 5 random numbers
+                                var randomNumbers = Array.from({ length: 5 }, () => getRandomNumber(40, 100));
+                        
+                                // Construct the URL
+                                //var url = `http://127.0.0.1:8000/sensor_data/?username={{ request.user.username }}&api_key={{ api_key }}&nodename={{ nodename }}&Depth_1=${randomNumbers[0]}&Depth_2=${randomNumbers[1]}&Depth_3=${randomNumbers[2]}&temperature=${randomNumbers[3]}&humidity=${randomNumbers[4]}`;
+                        
+                                var url = `https://agrosense.atharvapawar.repl.co/sensor_data/?username={{ request.user.username }}&api_key={{ api_key }}&nodename={{ nodename }}&Depth_1=${randomNumbers[0]}&Depth_2=${randomNumbers[1]}&Depth_3=${randomNumbers[2]}&temperature=${randomNumbers[3]}&humidity=${randomNumbers[4]}`;
+
+                                // Display the URL
+                                document.getElementById('channelFeed').innerHTML = url;
+                            </script>
+                        </div>
+                        
+                                            
+                        <div>Read a Channel Feed
+                            <div class="py-2 bg-gray-100 rounded my-4 px-2">
+                                <!-- http://127.0.0.1:8000/read_sensor_data/?username={{ request.user.username }}&api_key={{ api_key }}&nodename={{ nodename }} -->
+                                https://agrosense.atharvapawar.repl.co/read_sensor_data/?username={{ request.user.username }}&api_key={{ api_key }}&nodename={{ nodename }}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+          
+              </div>
+
+                
+                
+
+            </div>
+        </div>
+        <script>
+            // JavaScript to toggle visibility of accordion content
+            document.addEventListener('DOMContentLoaded', function () {
+              const accordionItems = document.querySelectorAll('.cursor-pointer');
+              accordionItems.forEach(item => {
+                item.addEventListener('click', function () {
+                  const content = this.nextElementSibling;
+                  content.classList.toggle('hidden');
+                });
+              });
+            });
+        </script>
+
+        {% endif %}
+
+    </div>
+
+
+    <!-- Footer -->
+
+    <!-- JScript -->
+    <script>
+        // JavaScript code to constantly change the text color
+        const heartIcon = document.getElementById('heartIcon');
+        setInterval(() => {
+            heartIcon.classList.toggle('text-black');
+            heartIcon.classList.toggle('text-red-600');
+        }, 1000); // Change color every 1000 milliseconds (1 second)
+
+
+        // copy api key 
+        document.getElementById('copyButton').addEventListener('click', function() {
+            // Get the API key text
+            var apiKeyText = document.getElementById('api_key');
+
+            // Create a temporary input element
+            var tempInput = document.createElement('input');
+            tempInput.value = apiKeyText.innerText;
+
+            // Append the input element to the document
+            document.body.appendChild(tempInput);
+
+            // Select the text in the input element
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999); /* For mobile devices */
+
+            // Copy the text to the clipboard
+            document.execCommand('copy');
+
+            // Remove the temporary input element
+            document.body.removeChild(tempInput);
+
+            // Display a message (optional)
+            alert('API Key copied to clipboard!');
+        });
+
+        
+            
+
+
+    </script>
+
+
+
+{% endblock %}

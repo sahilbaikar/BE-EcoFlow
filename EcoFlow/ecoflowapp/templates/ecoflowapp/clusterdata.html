@@ -1,0 +1,208 @@
+{% extends 'ecoflowapp/base.html' %} {% block title %}AgroSense | Node Data View{% endblock %}
+<div>{% block content %} {% load static %}</div>
+
+
+    <!-- content -->
+    <div class="">
+
+        <!-- Latest Sensor Data -->
+        <div id="sensordata" class="h-screen pt-16 bg-[#f0fdf4]">
+            <div class="text-2xl text-center font-bold py-3 text-green-700">{{ clustername|title }} Cluster Data</div>
+            <div class="mx-10 h-[550px] grid grid-cols-2 gap-4">
+                
+                <div class="text-center text-xl p-4 border shadow-xl rounded-xl bg-white">
+                    <!-- <div class="text-right mr-10 font-bold" id="heartIcon"><i class="fa-solid fa-heart-pulse text-4xl px-2"></i>Live</div> -->
+
+                    <div class="grid grid-cols-2 gap-2">
+
+                    {% if all_latest_sensor_data %}
+                        {% for node in all_latest_sensor_data %}
+                    
+                        <div class="border rounded-xl shadow p-2">
+                            <div class="pb-2">
+                                <div class="font-bold">
+                                    <div class="text-center">Node : <b class="text-green-700">{{ node.nodename }}</b></div>
+                                </div>
+                            </div>
+
+
+                            <div class="grid grid-cols-3 gap-1 pb-2">
+                                                            
+                                    <div class="h-20 border text-center py-2 rounded-lg shadow my-1">
+                                        <div class="font-bold pb-3 text-sm">Level 1</div>
+                                        <div class="text-sm"> 
+                                            <i class="fa-solid fa-droplet"></i>
+                                            {{ node.depth_1 }} %
+                                        </div>
+                                    </div>
+                                    <div class="h-20 border text-center py-2 rounded-lg shadow my-1">
+                                        <div class="font-bold pb-3 text-sm">Level 2</div>
+                                        <div class="text-sm"> 
+                                            <i class="fa-solid fa-droplet"></i>
+                                            {{ node.depth_2 }} %
+                                        </div>
+                                    </div>
+                                    <div class="h-20 border text-center py-2 rounded-lg shadow my-1">
+                                        <div class="font-bold pb-3 text-sm">Level 3</div>
+                                        <div class="text-sm"> 
+                                            <i class="fa-solid fa-droplet"></i>
+                                            {{ node.depth_3 }} %
+                                        </div>
+                                    </div>
+
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 text-center ">
+                                <div class="text-sm"><b>Temp <i class="fa-solid fa-temperature-low"></i> :</b> 
+                                    {{ node.temperature }} °C 
+                                </div>
+                                <div class="text-sm"><b>Hum <i class="fa-solid fa-water"></i>           :</b> 
+                                    {{ node.humidity }} % 
+                                </div>
+                            </div>
+
+                        </div>
+
+                        {% endfor %}
+                    {% endif %}
+                    </div>
+
+                </div>
+
+                {% if map_html %}
+                <div class="p-4 border shadow-xl rounded-xl bg-white">
+                    <div class="text-center text-xl font-bold">Location of Node on Map</div>
+                    <div class="rounded-xl my-4 h-[440px] border text-center text-xl font-bold px-2 pt-5">
+                        {{ map_html|safe }}
+                    </div>
+                </div>
+                {% endif %}
+
+
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="px-20 bg-[#f0fdf4]">
+            {% if all_latest_5_sensor_data_list %}
+            <div class="grid grid-cols-2 gap-4">
+
+                {% for queryset in all_latest_5_sensor_data_list %}
+                    {% if queryset %}
+                       
+                            <div class="border p-10 rounded-xl shadow-xl my-10 bg-gray-600">
+                                <div class="text-center text-2xl font-bold font-mono mb-6 text-white">{{ queryset.0.nodename|title }}</div>
+                                <canvas id="{{ queryset.0.nodename }}-chart" class=""></canvas>
+                            </div>   
+                                
+                            <script type="text/javascript">
+                                (function () {
+                                    /* Chart initialisations */
+                                    /* Line Chart */
+                                    var config = {
+                                        type: "line",
+                                        data: {
+                                            labels: [{% for entry in queryset %}"{{ entry.timestamp }}",{% endfor %}],
+                                            datasets: [
+                                                {
+                                                    label: '{{ queryset.0.nodename }} Temperature',
+                                                    backgroundColor: "rgba(255, 99, 132, 0.2)",
+                                                    borderColor: "rgba(255, 99, 132, 1)",
+                                                    data: [{% for entry in queryset %}{{ entry.temperature }},{% endfor %}],
+                                                    fill: false,
+                                                },
+                                                {
+                                                    label: '{{ queryset.0.nodename }} Humidity',
+                                                    backgroundColor: "rgba(75, 192, 192, 0.2)",
+                                                    borderColor: "rgba(75, 192, 192, 1)",
+                                                    data: [{% for entry in queryset %}{{ entry.humidity }},{% endfor %}],
+                                                    fill: false,
+                                                },
+                                            ],
+                                        },
+                                        options: {
+                                            maintainAspectRatio: false,
+                                            responsive: true,
+                                            title: {
+                                                display: false,
+                                            },
+                                            legend: {
+                                                labels: {
+                                                    fontColor: "white",
+                                                },
+                                                align: "end",
+                                                position: "bottom",
+                                            },
+                                            tooltips: {
+                                                mode: "index",
+                                                intersect: false,
+                                            },
+                                            hover: {
+                                                mode: "nearest",
+                                                intersect: true,
+                                            },
+                                            scales: {
+                                                xAxes: [
+                                                    {
+                                                        ticks: {
+                                                            fontColor: "rgba(255,255,255,.7)",
+                                                        },
+                                                        display: true,
+                                                        gridLines: {
+                                                            display: false,
+                                                        },
+                                                    },
+                                                ],
+                                                yAxes: [
+                                                    {
+                                                        ticks: {
+                                                            fontColor: "rgba(255,255,255,.7)",
+                                                        },
+                                                        display: true,
+                                                        gridLines: {
+                                                            color: "rgba(255, 255, 255, 0.15)",
+                                                        },
+                                                    },
+                                                ],
+                                            },
+                                        },
+                                    };
+                                    var ctx = document.getElementById("{{ queryset.0.nodename }}-chart").getContext("2d");
+                                    new Chart(ctx, config);
+                                })();
+                            </script>
+
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            {% else %}
+                <div class="text-center text-red-700 text-4xl font-bold mt-20">No Data for Chart</div>
+            {% endif %}
+        </div>
+
+
+        
+        
+
+
+    </div>
+
+
+
+    <!-- Footer -->
+
+    <!-- JScript -->
+    <script>
+        // JavaScript code to constantly change the text color
+        const heartIcon = document.getElementById('heartIcon');
+        setInterval(() => {
+            heartIcon.classList.toggle('text-black');
+            heartIcon.classList.toggle('text-red-600');
+        }, 1000); // Change color every 1000 milliseconds (1 second)
+
+    </script>
+
+
+
+{% endblock %}
